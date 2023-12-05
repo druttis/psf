@@ -7,11 +7,11 @@ import java.util.function.DoubleConsumer;
 
 public class ProgressInputStream extends InputStream {
     private final InputStream is;
-    private final int bytesToRead;
+    private final long bytesToRead;
     private final DoubleConsumer callback;
-    private int bytesRead;
+    private long bytesRead;
 
-    public ProgressInputStream(final InputStream is, final int bytesToRead, final DoubleConsumer callback) {
+    public ProgressInputStream(final InputStream is, final long bytesToRead, final DoubleConsumer callback) {
         Objects.requireNonNull(is, "is");
         Objects.requireNonNull(callback, "callback");
         this.is = is;
@@ -43,7 +43,7 @@ public class ProgressInputStream extends InputStream {
     }
 
     @Override
-    public synchronized void mark(int readlimit) {
+    public synchronized void mark(final int readlimit) {
         is.mark(readlimit);
     }
 
@@ -57,7 +57,7 @@ public class ProgressInputStream extends InputStream {
         return is.markSupported();
     }
 
-    private void update(final int n) {
+    private void update(final long n) {
         bytesRead += n;
         callback.accept(bytesRead / (double) bytesToRead);
     }

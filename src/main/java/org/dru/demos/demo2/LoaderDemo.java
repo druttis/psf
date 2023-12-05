@@ -1,5 +1,6 @@
 package org.dru.demos.demo2;
 
+import org.dru.psf.async.Async;
 import org.dru.psf.job.Job;
 import org.dru.psf.loader.Loader;
 
@@ -8,6 +9,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class LoaderDemo {
     private static final URL QUEUE = LoaderDemo.class.getResource("/queue.png");
@@ -38,6 +41,7 @@ public class LoaderDemo {
     }
 
     public static void main(String[] args) throws Exception {
+        Async.setBackgroundExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1));
         // one file just
         load(QUEUE);
         loadAll(List.of(QUEUE, PUPIL));

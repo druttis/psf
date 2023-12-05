@@ -11,6 +11,8 @@ import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleConsumer;
 
 public abstract class FileLoader<T> extends Loader<T> {
@@ -31,11 +33,19 @@ public abstract class FileLoader<T> extends Loader<T> {
 
     @Override
     public final T load(final Path path, final DoubleConsumer callback) throws IOException {
-        final int bytesToRead = (int) Files.size(path);
+        final long bytesToRead = Files.size(path);
+        final AtomicReference<Double> temp = new AtomicReference<>(0.0);
+        // For some reason ImageIO is not reading all bytes?
+        final DoubleConsumer consumer = v -> {
+            temp.set(v);
+            callback.accept(v);
+        };
         try (final InputStream is = Files.newInputStream(path)) {
-            try (final ProgressInputStream pis = new ProgressInputStream(is, bytesToRead, callback)) {
+            try (final ProgressInputStream pis = new ProgressInputStream(is, bytesToRead, consumer)) {
                 final T result = read(pis);
-                callback.accept(1.0);
+                if (Double.compare(temp.get(), 1.0) < 0) {
+                    callback.accept(1.0);
+                }
                 return result;
             }
         }
