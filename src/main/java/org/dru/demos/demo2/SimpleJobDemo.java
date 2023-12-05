@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 public class SimpleJobDemo {
     public static void main(String[] args) throws Exception {
         Async.setBackgroundExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1));
-        Job.resolved(new URL("https://www.google.com/index.html"))
+        Job.resolve(new URL("https://www.google.com/index.html"))
                 .then(url -> {
                     final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     final int bytesToRead = conn.getContentLength();

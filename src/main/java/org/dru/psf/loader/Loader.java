@@ -95,12 +95,20 @@ public abstract class Loader<T> {
     @SuppressWarnings("unchecked")
     public static <T> Job<T> load(final Path path) {
         final CompletableJob<T> destination = new CompletableJob<>();
-        Job.resolved(path)
+        Job.resolve(path)
                 .then($ -> (Loader<T>) lookup(path))
                 .then(loader -> loader.load(path, destination::update))
                 .onResolved(destination::resolve)
                 .onRejected(destination::reject);
         return destination;
+    }
+
+    public static Job<List<Object>> loadAll(final Collection<Path> paths) {
+        return Job.all(paths.stream().map(Loader::load).collect(Collectors.toList()));
+    }
+
+    public static Job<List<Object>> loadAll(final Path... paths) {
+        return loadAll(List.of(paths));
     }
 
     public abstract Class<T> getType();

@@ -4,7 +4,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
-public final class CompletableJob<T> extends AbstractJob<T> {
+public class CompletableJob<T> extends AbstractJob<T> {
     private final Object monitor;
     private AbstractJob<T> job;
 
@@ -14,12 +14,12 @@ public final class CompletableJob<T> extends AbstractJob<T> {
     }
 
     @Override
-    public JobState getState() {
+    public final JobState getState() {
         return job.getState();
     }
 
     @Override
-    public AbstractJob<T> resolve(final T result) {
+    public final AbstractJob<T> resolve(final T result) {
         synchronized (monitor) {
             job = job.resolve(result);
         }
@@ -27,7 +27,7 @@ public final class CompletableJob<T> extends AbstractJob<T> {
     }
 
     @Override
-    public AbstractJob<T> reject(final Exception reason) {
+    public final AbstractJob<T> reject(final Exception reason) {
         synchronized (monitor) {
             job = job.reject(reason);
         }
@@ -35,7 +35,7 @@ public final class CompletableJob<T> extends AbstractJob<T> {
     }
 
     @Override
-    public AbstractJob<T> update(final double progress) {
+    public final AbstractJob<T> update(final double progress) {
         synchronized (monitor) {
             job.update(progress);
         }
@@ -43,21 +43,21 @@ public final class CompletableJob<T> extends AbstractJob<T> {
     }
 
     @Override
-    protected void onResolved(final Consumer<? super T> callback, final Executor executor) {
+    protected final void onResolved(final Consumer<? super T> callback, final Executor executor) {
         synchronized (monitor) {
             job.onResolved(callback, executor);
         }
     }
 
     @Override
-    protected void onRejected(final Consumer<? super Exception> callback, final Executor executor) {
+    protected final void onRejected(final Consumer<? super Exception> callback, final Executor executor) {
         synchronized (monitor) {
             job.onRejected(callback, executor);
         }
     }
 
     @Override
-    protected void onUpdated(final DoubleConsumer callback, final Executor executor) {
+    protected final void onUpdated(final DoubleConsumer callback, final Executor executor) {
         synchronized (monitor) {
             job.onUpdated(callback, executor);
         }
