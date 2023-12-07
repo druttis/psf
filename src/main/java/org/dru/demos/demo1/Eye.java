@@ -1,41 +1,30 @@
 package org.dru.demos.demo1;
 
 import org.dru.psf.Application;
-import org.dru.psf.scene.*;
+import org.dru.psf.scene.Node;
+import org.dru.psf.scene.StaticSprite;
+import org.dru.psf.scene.Vector2;
 
-public class Eye extends Tree {
-    private static double lerp(final double source, final double target, final double fraction) {
-        return source + (target - source) * fraction;
-    }
+import java.awt.image.BufferedImage;
 
-    private static Vector2 lerp(final Vector2 source, final Vector2 target, final double fraction,
-                                final Vector2 dest) {
-        return dest.set(lerp(source.x(), target.x(), fraction), lerp(source.y(), target.y(), fraction));
-    }
-
-    private static Vector2 lerp(final Vector2 source, final Vector2 target, final double fraction) {
-        return lerp(source, target, fraction, new Vector2());
-    }
-
-    private StaticSprite globe;
-    private StaticSprite lid;
-    private Tree pupilCenter;
+public class Eye extends StaticSprite {
+    private BufferedImage globe;
+    private BufferedImage lid;
+    private Node pupilCenter;
     private StaticSprite pupil;
     private Vector2 targetPosition;
     private double focus;
     private double targetFocus;
 
     public Eye() {
-        globe = new StaticSprite(Eye.class.getResource("/globe.png"));
-        lid = new StaticSprite(Eye.class.getResource("/lid.png"));
-        lid.setVisible(false);
-        pupilCenter = new Tree();
+        super();
+        setImage(globe = readImage("/globe.png"));
+        lid = readImage("/lid.png");
+        pupilCenter = new Node();
         pupilCenter.setPosition(6, 6);
-        pupil = new StaticSprite(Eye.class.getResource("/pupil.png"));
+        pupil = new StaticSprite("/pupil.png");
         setLookAt(null);
         setFocus(1.0);
-        addChild(globe);
-        addChild(lid);
         addChild(pupilCenter);
         pupilCenter.addChild(pupil);
     }
@@ -64,8 +53,7 @@ public class Eye extends Tree {
     }
 
     void setOpen(final boolean open) {
-        globe.setVisible(open);
-        lid.setVisible(!open);
+        setImage(open ? globe : lid);
         pupil.setVisible(open);
     }
 

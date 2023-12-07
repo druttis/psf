@@ -23,8 +23,8 @@ public class Grid9Sprite extends Sprite {
         super(image);
     }
 
-    public Grid9Sprite(final URL url) {
-        super(url);
+    public Grid9Sprite(final String path) {
+        super(path);
     }
 
     @Override

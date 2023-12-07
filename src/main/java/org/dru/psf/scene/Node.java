@@ -1,10 +1,9 @@
 package org.dru.psf.scene;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Todo: Pry in Tree into Node
@@ -18,7 +17,7 @@ import java.awt.geom.Rectangle2D;
  * Todo: Create a smart way to deal with createShape() when mixing child nodes and other things.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public abstract class Node {
+public class Node {
     private double positionX;
     private double positionY;
     private double scaleX;
@@ -30,7 +29,8 @@ public abstract class Node {
     private double alpha;
     private boolean antialias;
     private Node clip;
-    private transient Tree parent;
+    private final List<Node> children;
+    private transient Node parent;
     private transient boolean validLocalTransform;
     private transient final AffineTransform localTransform;
     private transient boolean validGlobalTransform;
@@ -46,6 +46,7 @@ public abstract class Node {
         setScale(1.0, 1.0);
         setVisible(true);
         setAlpha(1.0);
+        children = new ArrayList<>();
     }
 
     public final Vector2 getPosition() {
@@ -90,7 +91,7 @@ public abstract class Node {
     }
 
     public final Node setGlobalPosition(final double newPositionX, final double newPositionY) {
-        final Tree parent = getParent();
+        final Node parent = getParent();
         if (parent != null) {
             final Point2D point = new Point2D.Double(newPositionX, newPositionY);
             try {
@@ -168,16 +169,16 @@ public abstract class Node {
 
     public final double getGlobalRotation(final boolean asDegrees) {
         double rotation = getRotation(asDegrees);
-        Tree tree = getParent();
-        while (tree != null) {
-            rotation += tree.getRotation(asDegrees);
-            tree = tree.getParent();
+        Node parent = getParent();
+        while (parent != null) {
+            rotation += parent.getRotation(asDegrees);
+            parent = parent.getParent();
         }
         return rotation;
     }
 
     public final Node setGlobalRotation(final double newRotation, final boolean inDegrees) {
-        final Tree parent = getParent();
+        final Node parent = getParent();
         if (parent != null) {
             return setRotation(newRotation - parent.getGlobalRotation(false), inDegrees);
         } else {
@@ -245,11 +246,85 @@ public abstract class Node {
         clip = newClip;
     }
 
-    public final Tree getParent() {
+    public final List<Node> getChildren(final List<Node> dest) {
+        dest.addAll(children);
+        return dest;
+    }
+
+    public final List<Node> getChildren() {
+        return getChildren(new ArrayList<>());
+    }
+
+    public final int getChildCount() {
+        return children.size();
+    }
+
+    public final Node getChild(final int index) {
+        return children.get(index);
+    }
+
+    public final int getChildIndex(final Node child) {
+        return children.indexOf(child);
+    }
+
+    public final void addChild(final int index, final Node child) {
+        final Node parent = child.getParent();
+        if (parent != null) {
+            if (parent == this) {
+                final int oldIndex = children.indexOf(child);
+                if (index != oldIndex) {
+                    final Node current = children.remove(index);
+                    if (index < oldIndex) {
+                        children.remove(oldIndex);
+                        children.add(index, child);
+                    } else {
+                        children.add(index, child);
+                        child.removeChild(oldIndex);
+                    }
+                }
+                return;
+            }
+            parent.removeChild(child);
+        }
+        children.add(index, child);
+        child.setParent(this);
+        invalidateShape();
+        invalidateLocalTransform();
+        child.invalidateGlobalTransform();
+    }
+
+    public final void addChild(final Node child) {
+        addChild(getChildCount(), child);
+    }
+
+    public final Node removeChild(final int index) {
+        final Node child = children.remove(index);
+        child.setParent(null);
+        invalidateShape();
+        invalidateLocalTransform();
+        return child;
+    }
+
+    public final int removeChild(final Node child) {
+        final int index = getChildIndex(child);
+        if (index >= 0) {
+            removeChild(index);
+        }
+        return index;
+    }
+
+    public final void removeAllChildren() {
+        int childCount;
+        while ((childCount = getChildCount()) > 0) {
+            removeChild(childCount - 1);
+        }
+    }
+
+    public final Node getParent() {
         return parent;
     }
 
-    final void setParent(final Tree parent) {
+    final void setParent(final Node parent) {
         this.parent = parent;
     }
 
@@ -289,7 +364,9 @@ public abstract class Node {
         if (validGlobalTransform) {
             validGlobalTransform = false;
             invalidateGlobalShape();
-            invalidateChildrenGlobalTransform();
+            for (final Node child : children) {
+                child.invalidateGlobalTransform();
+            }
         }
     }
 
@@ -325,7 +402,7 @@ public abstract class Node {
 
     public final Shape getShape() {
         if (shape == null) {
-            shape = createShape();
+            shape = createShapeInternal();
         }
         return shape;
     }
@@ -370,6 +447,13 @@ public abstract class Node {
         return composite;
     }
 
+    final void updateInternal() {
+        update();
+        for (final Node child : children) {
+            child.updateInternal();
+        }
+    }
+
     final void paintInternal(final Graphics2D graphics) {
         if (visible) {
             final AffineTransform saveTransform = graphics.getTransform();
@@ -391,6 +475,9 @@ public abstract class Node {
                     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, antialias ?
                             RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
                     paint(graphics);
+                    for (final Node child : children) {
+                        child.paintInternal(graphics);
+                    }
                 }
             } finally {
                 graphics.setTransform(saveTransform);
@@ -401,17 +488,25 @@ public abstract class Node {
         }
     }
 
-    protected void invalidateChildrenGlobalTransform() {
+    private Shape createShapeInternal() {
+        final Path2D path = new Path2D.Double();
+        for (final Node child : children) {
+            path.append(child.getLocalShape(), false);
+        }
+        final Shape shape = createShape();
+        if (shape != null) {
+            path.append(shape, false);
+        }
+        return path;
     }
 
-    protected abstract Shape createShape();
-
-    protected abstract void paint(final Graphics2D graphics);
-
-    void updateInternal() {
-        update();
+    protected Shape createShape() {
+        return null;
     }
 
     protected void update() {
+    }
+
+    protected void paint(final Graphics2D graphics) {
     }
 }

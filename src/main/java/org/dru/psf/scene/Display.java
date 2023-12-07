@@ -147,12 +147,10 @@ public final class Display {
         Toolkit.getDefaultToolkit().sync();
     }
 
-    private static int countNodes(Node node, int count) {
+    private static int countNodes(final Node node, int count) {
         count++;
-        if (node instanceof Tree tree) {
-            for (int index = 0; index < tree.getChildCount(); index++) {
-                count = countNodes(tree.getChild(index), count);
-            }
+        for (int index = 0; index < node.getChildCount(); index++) {
+            count = countNodes(node.getChild(index), count);
         }
         return count;
     }

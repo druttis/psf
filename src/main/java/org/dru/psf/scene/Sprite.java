@@ -10,23 +10,25 @@ import java.net.URL;
 import java.util.Objects;
 
 public abstract class Sprite extends Node {
+    public static BufferedImage readImage(final String path) {
+        try {
+            return ImageIO.read(Sprite.class.getResource(path));
+        } catch (final IOException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
     private BufferedImage image;
 
     public Sprite() {
     }
 
     public Sprite(final BufferedImage image) {
-        this();
         setImage(image);
     }
 
-    public Sprite(URL url) {
-        this();
-        try {
-            setImage(ImageIO.read(url));
-        } catch (final IOException exception) {
-            throw new RuntimeException(exception);
-        }
+    public Sprite(final String path) {
+        this(readImage(path));
     }
 
     @Override

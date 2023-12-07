@@ -1,11 +1,11 @@
 package org.dru.psf.ui;
 
-import org.dru.psf.scene.Tree;
+import org.dru.psf.scene.Node;
 import org.dru.psf.scene.Vector2;
 
 import java.awt.*;
 
-public abstract class Widget extends Tree {
+public abstract class Widget extends Node {
     private int width;
     private int height;
 

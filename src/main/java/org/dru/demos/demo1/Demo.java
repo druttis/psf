@@ -60,7 +60,7 @@ public class Demo {
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
-        final Tree scene = new Tree();
+        final Node scene = new Node();
         PLAYER = new Player(ASTAR);
         PLAYER.setPositionToTile(1, 1);
         final Robot robot1 = new Robot(ASTAR);

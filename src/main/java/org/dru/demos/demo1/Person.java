@@ -2,16 +2,14 @@ package org.dru.demos.demo1;
 
 import org.dru.psf.Application;
 import org.dru.psf.scene.AStar;
-import org.dru.psf.scene.Display;
-import org.dru.psf.scene.Tree;
+import org.dru.psf.scene.Node;
 import org.dru.psf.scene.Vector2;
 
 import java.awt.*;
-import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
-public abstract class Person extends Tree {
+public abstract class Person extends Node {
     public static final Vector2 TILE_CENTER = new Vector2(Demo.TILE_WIDTH >> 1, Demo.TILE_HEIGHT >> 1);
     protected final Head head;
     protected final AStar aStar;

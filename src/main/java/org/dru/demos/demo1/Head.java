@@ -2,14 +2,12 @@ package org.dru.demos.demo1;
 
 import org.dru.psf.Application;
 import org.dru.psf.scene.StaticSprite;
-import org.dru.psf.scene.Tree;
 import org.dru.psf.scene.Vector2;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class Head extends Tree {
-    private StaticSprite face;
+public class Head extends StaticSprite {
     private Eye leftEye;
     private Eye rightEye;
     private Slots slots;
@@ -25,14 +23,13 @@ public class Head extends Tree {
         gr.setColor(color);
         gr.fillOval(1, 1, 31, 37);
         gr.dispose();
-        face = new StaticSprite(image);
+        setImage(image);
         leftEye = new Eye();
         leftEye.setPosition(-3, 7);
         rightEye = new Eye();
         rightEye.setPosition(18, 7);
         slots = new Slots();
         slots.setPosition(17 - 8, 24.0);
-        addChild(face);
         addChild(leftEye);
         addChild(rightEye);
 //        addChild(slots);

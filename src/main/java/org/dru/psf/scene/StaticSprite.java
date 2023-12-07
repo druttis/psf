@@ -12,8 +12,8 @@ public class StaticSprite extends Sprite {
         super(image);
     }
 
-    public StaticSprite(final URL url) {
-        super(url);
+    public StaticSprite(final String path) {
+        super(path);
     }
 
     @Override
