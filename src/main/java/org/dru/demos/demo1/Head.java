@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 public class Head extends StaticSprite {
     private Eye leftEye;
     private Eye rightEye;
-    private Slots slots;
     private double remaining;
     private boolean open;
 
@@ -28,11 +27,8 @@ public class Head extends StaticSprite {
         leftEye.setPosition(-3, 7);
         rightEye = new Eye();
         rightEye.setPosition(18, 7);
-        slots = new Slots();
-        slots.setPosition(17 - 8, 24.0);
         addChild(leftEye);
         addChild(rightEye);
-//        addChild(slots);
     }
 
     public Head() {
@@ -54,14 +50,6 @@ public class Head extends StaticSprite {
     public void setVisibleEyes(final boolean s) {
         leftEye.setVisible(s);
         rightEye.setVisible(s);
-    }
-
-    public double getSlotsAlpha(final int index) {
-        return slots.getAlpha(index);
-    }
-
-    public void setSlotsAlpha(final int index, final double alpha) {
-        slots.setAlpha(index, alpha);
     }
 
     public void setLookAt(final Vector2 newTargetPosition) {
