@@ -11,11 +11,8 @@ public class Button extends Widget {
     private StaticText caption;
 
     public Button() {
-        setAlign(0.5, 0.5);
         background = new Grid9Sprite();
-        background.setAlign(0.0, 0.0);
         caption = new StaticText();
-        caption.setAlign(0.0, 0.0);
         addChild(background);
         addChild(caption);
     }

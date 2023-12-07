@@ -19,6 +19,7 @@ public class Eye extends Tree {
 
     private StaticSprite globe;
     private StaticSprite lid;
+    private Tree pupilCenter;
     private StaticSprite pupil;
     private Vector2 targetPosition;
     private double focus;
@@ -28,12 +29,15 @@ public class Eye extends Tree {
         globe = new StaticSprite(Eye.class.getResource("/globe.png"));
         lid = new StaticSprite(Eye.class.getResource("/lid.png"));
         lid.setVisible(false);
+        pupilCenter = new Tree();
+        pupilCenter.setPosition(6, 6);
         pupil = new StaticSprite(Eye.class.getResource("/pupil.png"));
         setLookAt(null);
         setFocus(1.0);
         addChild(globe);
         addChild(lid);
-        addChild(pupil);
+        addChild(pupilCenter);
+        pupilCenter.addChild(pupil);
     }
 
     @Override
@@ -51,7 +55,7 @@ public class Eye extends Tree {
                 focus = targetFocus;
             }
         }
-        final Vector2 centerPosition = getGlobalPosition();
+        final Vector2 centerPosition = pupilCenter.getGlobalPosition();
         final Vector2 difference = targetPosition.difference(centerPosition);
         double length = Math.min(4, difference.length() * 0.1);
         length *= focus;

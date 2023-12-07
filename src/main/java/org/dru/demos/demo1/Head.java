@@ -1,47 +1,45 @@
 package org.dru.demos.demo1;
 
 import org.dru.psf.Application;
-import org.dru.psf.scene.*;
+import org.dru.psf.scene.StaticSprite;
+import org.dru.psf.scene.Tree;
+import org.dru.psf.scene.Vector2;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 
 public class Head extends Tree {
-    private BufferedImage image;
+    private StaticSprite face;
     private Eye leftEye;
     private Eye rightEye;
     private Slots slots;
     private double remaining;
     private boolean open;
 
-    public Head() {
-        image = new BufferedImage(33, 39, BufferedImage.TYPE_INT_ARGB);
+    public Head(final Color color) {
+        final BufferedImage image = new BufferedImage(33, 39, BufferedImage.TYPE_INT_ARGB);
         final Graphics2D gr = image.createGraphics();
         gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         gr.setColor(Color.black);
         gr.fillOval(0, 0, 33, 39);
-        gr.setColor(Color.orange);
+        gr.setColor(color);
         gr.fillOval(1, 1, 31, 37);
         gr.dispose();
+        face = new StaticSprite(image);
         leftEye = new Eye();
-        leftEye.setPosition(-10, -5);
+        leftEye.setPosition(-3, 7);
         rightEye = new Eye();
-        rightEye.setPosition(10, -5);
+        rightEye.setPosition(18, 7);
         slots = new Slots();
-        slots.setAlign(0.5, 0.5);
-        slots.setPosition(0.0, 10.0);
+        slots.setPosition(17 - 8, 24.0);
+        addChild(face);
         addChild(leftEye);
         addChild(rightEye);
 //        addChild(slots);
     }
 
-    @Override
-    protected Shape createShape() {
-        final Path2D path = (Path2D) super.createShape();
-        path.append(new Ellipse2D.Double(-17, -20, 33, 39), false);
-        return path;
+    public Head() {
+        this(new Color(255, 127, 0));
     }
 
     @Override
@@ -54,12 +52,6 @@ public class Head extends Tree {
             leftEye.setOpen(open);
             rightEye.setOpen(open);
         }
-    }
-
-    @Override
-    protected void paint(final Graphics2D graphics) {
-        graphics.drawImage(image, -17, -20, null);
-        super.paint(graphics);
     }
 
     public double getSlotsAlpha(final int index) {

@@ -1,8 +1,9 @@
 package org.dru.psf.scene;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Todo: 1) Optimize/Reduce path to make a linear wise straighter flow.
@@ -12,28 +13,27 @@ import java.util.List;
  *      setEnd(globalPoint : Vector2D);
  *      generatePath()
  *      getNext(globalPoint : Vector2D) <-- current
- *
- *      or similar.
+ * <p>
+ * or similar.
  */
 public class AStar extends Node {
     private final int tileWidth;
     private final int tileHeight;
     private final int width;
     private final int height;
-    private final Set<Tile> open;
     private final Set<Tile> closed;
-    private final List<Tile> path;
-    private Tile start;
-    private Tile end;
+    private final List<Tile> commonPath;
+    private Tile startTile;
+    private Tile endTile;
 
-    public AStar(final int tileWidth, final int tileHeight, final int columnCount, final int rowCount) {
+    public AStar(final int tileWidth, final int tileHeight, final int rowCount, final int columnCount) {
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
         width = tileWidth * columnCount;
         height = tileHeight * rowCount;
-        open = new HashSet<>();
-        closed = new HashSet<>();
-        path = new ArrayList<>();
+        closed = ConcurrentHashMap.newKeySet();
+        commonPath = new ArrayList<>();
+        setAlpha(0.3);
     }
 
     @Override
@@ -54,32 +54,37 @@ public class AStar extends Node {
             graphics.fillRect(tile.x, tile.y, tileWidth, tileHeight);
         }
         graphics.setColor(Color.green);
-        if (start != null) {
-            graphics.fillRect(start.x, start.y, tileWidth, tileHeight);
+        if (startTile != null) {
+            graphics.fillRect(startTile.x, startTile.y, tileWidth, tileHeight);
         }
         graphics.setColor(Color.orange);
-        for (final Tile tile : path) {
+        for (final Tile tile : commonPath) {
             graphics.fillRect(tile.x + (tileWidth >> 2), tile.y + (tileHeight >> 2), tileWidth >> 1, tileHeight >> 1);
         }
     }
 
-    public Vector2 getNext(final Vector2 source) {
+    public int getTileWidth() {
+        return tileWidth;
+    }
+
+    public int getTileHeight() {
+        return tileHeight;
+    }
+
+    public List<Tile> getCommonPath() {
+        return commonPath;
+    }
+
+    public Vector2 getNext(final List<Tile> path) {
         if (path.isEmpty()) {
             return null;
         } else {
             final Tile first = path.get(0);
-            final Vector2 result = new Vector2(first.x + (tileWidth >> 1), first.y + (tileHeight >> 1));
-            final double distance = result.distance(source);
-            if (distance < tileWidth * 0.1 || distance < tileHeight * 0.1) {
-                if (path.size() > 1) {
-                    path.remove(0);
-                }
-            }
-            return result;
+            return new Vector2(first.x, first.y);
         }
     }
 
-    public void removeFirst() {
+    public void removeFirst(final List<Tile> path) {
         if (!path.isEmpty()) {
             path.remove(0);
         }
@@ -90,47 +95,64 @@ public class AStar extends Node {
     }
 
     public void setStart(final int x, final int y) {
-        start = createTile(x, y);
+        startTile = createTile(x, y);
     }
 
     public void setStart(final double x, final double y) {
         setStart((int) Math.round(x), (int) Math.round(y));
     }
 
-    public void setStart(final Vector2 v) {
+    public void setStartTile(final Vector2 v) {
         setStart(v.x(), v.y());
     }
 
-    public Tile getEnd() {
-        return end;
+    public Tile getEndTile() {
+        return endTile;
     }
 
     public void setEnd(final int x, final int y) {
-        end = createTile(x, y);
+        endTile = createTile(x, y);
     }
 
     public void setEnd(final double x, final double y) {
         setEnd((int) Math.round(x), (int) Math.round(y));
     }
 
-    public void setEnd(final Vector2 v) {
+    public void setEndTile(final Vector2 v) {
         setEnd(v.x(), v.y());
     }
 
-    public void addClosed(final int x, final int y) {
-        closed.add(createTile(x, y));
+    public boolean isClosed(final int x, final int y) {
+        return closed.contains(createTile(x, y));
     }
 
-    public void addClosed(final double x, final double y) {
-        addClosed((int) Math.round(x), (int) Math.round(y));
+    public boolean isClosed(final double x, final double y) {
+        return isClosed((int) Math.round(x), (int) Math.round(y));
     }
 
-    public void addClosed(final Vector2 v) {
-        addClosed(v.x(), v.y());
+    public boolean isClosed(final Vector2 v) {
+        return isClosed(v.x(), v.y());
+    }
+
+    public Tile addClosed(final int x, final int y) {
+        final Tile tile = createTile(x, y);
+        return closed.add(tile) ? tile : null;
+    }
+
+    public Tile addClosed(final double x, final double y) {
+        return addClosed((int) Math.round(x), (int) Math.round(y));
+    }
+
+    public Tile addClosed(final Vector2 v) {
+        return addClosed(v.x(), v.y());
+    }
+
+    public void removeClosed(final Tile tile) {
+        closed.remove(tile);
     }
 
     public void removeClosed(final int x, final int y) {
-        closed.remove(new Tile((x / tileWidth) * tileWidth, (y / tileHeight) * tileHeight));
+        removeClosed(createTile(x, y));
     }
 
     public void removeClosed(final double x, final double y) {
@@ -145,18 +167,19 @@ public class AStar extends Node {
         return (tile.x >= 0 && tile.y >= 0) && (tile.x < width && tile.y < height);
     }
 
-    private boolean isClosed(final int x, final int y) {
+    private boolean isClosed(final Set<Tile> closed, final int x, final int y) {
         return closed.contains(new Tile(x, y));
     }
 
-    public void findPath() {
-        if (closed.contains(start)) {
+    public void findPath(final List<Tile> path) {
+        if (closed.contains(startTile)) {
             return;
         }
         path.clear();
-        open.clear();
-        open.add(start);
+        final Set<Tile> open = new HashSet<>();
+        open.add(startTile);
         final Set<Tile> closed = new HashSet<>(this.closed);
+        Tile closest = startTile;
         while (!open.isEmpty()) {
             final Map<Tile, Double> costs = new HashMap<>();
             for (Tile tile : open) {
@@ -165,24 +188,25 @@ public class AStar extends Node {
             Tile current = Collections.min(costs.entrySet(), Map.Entry.comparingByValue()).getKey();
             open.remove(current);
             closed.add(current);
-            if (current.equals(end)) {
-                while (!current.equals(start)) {
+            if (current.equals(endTile)) {
+                while (!current.equals(startTile)) {
                     path.add(current);
                     current = current.parent;
                 }
-                if (path.size() < 1) {
+                if (path.isEmpty()) {
                     path.add(current);
+                    return;
                 }
                 Collections.reverse(path);
-                Tile a = current;
+                Tile a = startTile;
                 for (int index = 0; index < path.size(); index++) {
                     final Tile b = path.get(index);
                     //   A*   *A   BX,AY   |    A   A    AX,BY
                     //    B   B            |   *B   B*
                     if (a.x != b.x && a.y != b.y) {
-                        if (isClosed(b.x, a.y) && !isClosed(a.x, b.y)) {
+                        if (isClosed(closed, b.x, a.y) && !isClosed(closed, a.x, b.y)) {
                             path.add(index, createTile(a.x, b.y));
-                        } else if (isClosed(a.x, b.y) && !isClosed(b.x, a.y)) {
+                        } else if (isClosed(closed, a.x, b.y) && !isClosed(closed, b.x, a.y)) {
                             path.add(index, createTile(b.x, a.y));
                         }
                     }
@@ -190,27 +214,35 @@ public class AStar extends Node {
                 }
                 return;
             }
-            for (final Tile adjacent : current.getAdjacentTiles()) {
+            if (current.getDistanceTo(endTile) < closest.getDistanceTo(endTile)) {
+                closest = current;
+            }
+            for (final Tile adjacent : current.getAdjacentTiles(this)) {
                 if (closed.contains(adjacent) || !inBound(adjacent)) {
                     continue;
                 }
+                // Don't allow passing through vertical closed tiles.
                 if (current.x != adjacent.x && current.y != adjacent.y) {
-                    if (isClosed(current.x, adjacent.y) && isClosed(adjacent.x, current.y)) {
+                    if (isClosed(closed, current.x, adjacent.y) && isClosed(closed, adjacent.x, current.y)) {
                         continue;
                     }
                 }
                 double newG = current.g + adjacent.getDistanceTo(current);
                 if (newG < adjacent.g || !open.contains(adjacent)) {
                     adjacent.g = newG;
-                    adjacent.h = adjacent.getDistanceTo(end);
+                    adjacent.h = adjacent.getDistanceTo(endTile);
                     adjacent.parent = current;
                     open.add(adjacent);
                 }
             }
+            if (open.isEmpty()) {
+                endTile = closest;
+                open.add(endTile);
+            }
         }
     }
 
-    public final class Tile {
+    public static final class Tile {
         private final int x;
         private final int y;
         private Tile parent;
@@ -235,21 +267,21 @@ public class AStar extends Node {
         }
 
         public double getDistanceTo(final Tile other) {
-            final int dx = Math.abs(other.x - x);
-            final int dy = Math.abs(other.y - y);
+            final int dx = other.x - x;
+            final int dy = other.y - y;
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        public List<Tile> getAdjacentTiles() {
+        public List<Tile> getAdjacentTiles(AStar aStar) {
             return List.of(
-                    new Tile(x + tileWidth, y + tileHeight),
-                    new Tile(x + tileWidth, y),
-                    new Tile(x + tileWidth, y - tileHeight),
-                    new Tile(x, y - tileHeight),
-                    new Tile(x - tileWidth, y - tileHeight),
-                    new Tile(x - tileWidth, y),
-                    new Tile(x - tileWidth, y + tileHeight),
-                    new Tile(x, y + tileHeight)
+                    new Tile(x + aStar.tileWidth, y + aStar.tileHeight),
+                    new Tile(x + aStar.tileWidth, y),
+                    new Tile(x + aStar.tileWidth, y - aStar.tileHeight),
+                    new Tile(x, y - aStar.tileHeight),
+                    new Tile(x - aStar.tileWidth, y - aStar.tileHeight),
+                    new Tile(x - aStar.tileWidth, y),
+                    new Tile(x - aStar.tileWidth, y + aStar.tileHeight),
+                    new Tile(x, y + aStar.tileHeight)
             );
         }
 
@@ -267,6 +299,5 @@ public class AStar extends Node {
             result = 31 * result + y;
             return result;
         }
-
     }
 }

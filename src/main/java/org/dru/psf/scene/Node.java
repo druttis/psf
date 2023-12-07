@@ -21,13 +21,9 @@ import java.awt.geom.Rectangle2D;
 public abstract class Node {
     private double positionX;
     private double positionY;
-    private double rotation;
     private double scaleX;
     private double scaleY;
-    private double alignX;
-    private double alignY;
-    private double offsetX;
-    private double offsetY;
+    private double rotation;
     private double shearX;
     private double shearY;
     private boolean visible;
@@ -120,6 +116,37 @@ public abstract class Node {
         return translateGlobalPosition(delta.x(), delta.y());
     }
 
+    public final Vector2 getScale() {
+        return new Vector2(scaleX, scaleY);
+    }
+
+    public final Node setScale(final double newScaleX, final double newScaleY) {
+        final double oldScaleX = scaleX;
+        final double oldScaleY = scaleY;
+        scaleX = newScaleX;
+        scaleY = newScaleY;
+        if (newScaleX != oldScaleX || newScaleY != oldScaleY) {
+            invalidateLocalTransform();
+        }
+        return this;
+    }
+
+    public final Node setScale(final Vector2 newScale) {
+        return setScale(newScale.x(), newScale.y());
+    }
+
+    public final Node scale(final double deltaX, final double deltaY) {
+        return setScale(scaleX + deltaX, scaleY + deltaY);
+    }
+
+    public final Node scale(final Vector2 delta) {
+        return scale(delta.x(), delta.y());
+    }
+
+    public final Node scale(final double delta) {
+        return scale(delta, delta);
+    }
+
     public final double getRotation(final boolean asDegrees) {
         final double rotation = this.rotation;
         return asDegrees ? Math.toDegrees(rotation) : rotation;
@@ -156,77 +183,6 @@ public abstract class Node {
         } else {
             return setRotation(newRotation, inDegrees);
         }
-    }
-
-    public final Vector2 getScale() {
-        return new Vector2(scaleX, scaleY);
-    }
-
-    public final Node setScale(final double newScaleX, final double newScaleY) {
-        final double oldScaleX = scaleX;
-        final double oldScaleY = scaleY;
-        scaleX = newScaleX;
-        scaleY = newScaleY;
-        if (newScaleX != oldScaleX || newScaleY != oldScaleY) {
-            invalidateLocalTransform();
-        }
-        return this;
-    }
-
-    public final Node setScale(final Vector2 newScale) {
-        return setScale(newScale.x(), newScale.y());
-    }
-
-    public final Node scale(final double deltaX, final double deltaY) {
-        return setScale(scaleX + deltaX, scaleY + deltaY);
-    }
-
-    public final Node scale(final Vector2 delta) {
-        return scale(delta.x(), delta.y());
-    }
-
-    public final Node scale(final double delta) {
-        return scale(delta, delta);
-    }
-
-    public final Vector2 getAlign() {
-        return new Vector2(alignX, alignY);
-    }
-
-    public final Node setAlign(final double newAlignX, final double newAlignY) {
-        final double useAlignX = Math.max(0.0, Math.min(1.0, newAlignX));
-        final double useAlignY = Math.max(0.0, Math.min(1.0, newAlignY));
-        final double oldAlignX = alignX;
-        final double oldAlignY = alignY;
-        alignX = useAlignX;
-        alignY = useAlignY;
-        if (useAlignX != oldAlignX || useAlignY != oldAlignY) {
-            invalidateLocalTransform();
-        }
-        return this;
-    }
-
-    public final Node setAlign(final Vector2 newAlign) {
-        return setAlign(newAlign.x(), newAlign.y());
-    }
-
-    public final Vector2 getOffset() {
-        return new Vector2(offsetX, offsetY);
-    }
-
-    public final Node setOffset(final double newOffsetX, final double newOffsetY) {
-        final double oldOffsetX = offsetX;
-        final double oldOffsetY = offsetY;
-        offsetX = newOffsetX;
-        offsetY = newOffsetY;
-        if (newOffsetX != oldOffsetX || newOffsetY != oldOffsetY) {
-            invalidateLocalTransform();
-        }
-        return this;
-    }
-
-    public final Node setOffset(final Vector2 newOffset) {
-        return setOffset(newOffset.x(), newOffset.y());
     }
 
     public final Vector2 getShear() {
@@ -310,14 +266,12 @@ public abstract class Node {
             validLocalTransform = true;
             final Shape shape = getShape();
             final Rectangle2D bounds = shape.getBounds2D();
-            final double translateX = bounds.getWidth() * alignX;
-            final double translateY = bounds.getHeight() * alignY;
             localTransform.setToTranslation(positionX, positionY);
-//            localTransform.translate(translateX, translateY);
-            localTransform.rotate(rotation);
             localTransform.scale(scaleX, scaleY);
-            localTransform.translate(-translateX, -translateY);
-            localTransform.translate(-offsetX, -offsetY);
+            localTransform.translate(bounds.getCenterX(), bounds.getCenterY());
+            localTransform.rotate(rotation);
+            localTransform.translate(-bounds.getCenterX(), -bounds.getCenterY());
+            localTransform.shear(shearX, shearY);
         }
         return localTransform;
     }

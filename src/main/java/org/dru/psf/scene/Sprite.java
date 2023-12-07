@@ -13,7 +13,6 @@ public abstract class Sprite extends Node {
     private BufferedImage image;
 
     public Sprite() {
-        setAlign(0.5, 0.5);
     }
 
     public Sprite(final BufferedImage image) {

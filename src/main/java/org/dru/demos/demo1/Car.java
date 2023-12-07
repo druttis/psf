@@ -28,7 +28,6 @@ public class Car extends Node {
     private double direction;
 
     public Car() {
-        setAlign(0.5, 0.5);
         try {
             tileSet = new TileSet(100, 100, ImageIO.read(Car.class.getResource("/TAXI_CLEAN_ALLD0000-sheet.png")));
         } catch (IOException e) {

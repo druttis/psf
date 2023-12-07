@@ -11,7 +11,6 @@ public final class StaticText extends Node {
     private Color color;
 
     public StaticText(final String text, final Font font, final Color color) {
-        setAlign(0.5, 0.5);
         setText(text);
         setFont(font);
         setColor(color);
