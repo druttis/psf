@@ -54,6 +54,11 @@ public class Head extends Tree {
         }
     }
 
+    public void setVisibleEyes(final boolean s) {
+        leftEye.setVisible(s);
+        rightEye.setVisible(s);
+    }
+
     public double getSlotsAlpha(final int index) {
         return slots.getAlpha(index);
     }

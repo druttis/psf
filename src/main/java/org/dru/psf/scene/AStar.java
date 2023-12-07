@@ -198,32 +198,18 @@ public class AStar extends Node {
                     return;
                 }
                 Collections.reverse(path);
-                Tile a = startTile;
-                for (int index = 0; index < path.size(); index++) {
-                    final Tile b = path.get(index);
-                    //   A*   *A   BX,AY   |    A   A    AX,BY
-                    //    B   B            |   *B   B*
-                    if (a.x != b.x && a.y != b.y) {
-                        if (isClosed(closed, b.x, a.y) && !isClosed(closed, a.x, b.y)) {
-                            path.add(index, createTile(a.x, b.y));
-                        } else if (isClosed(closed, a.x, b.y) && !isClosed(closed, b.x, a.y)) {
-                            path.add(index, createTile(b.x, a.y));
-                        }
-                    }
-                    a = b;
-                }
                 return;
             }
             if (current.getDistanceTo(endTile) < closest.getDistanceTo(endTile)) {
                 closest = current;
             }
             for (final Tile adjacent : current.getAdjacentTiles(this)) {
-                if (closed.contains(adjacent) || !inBound(adjacent)) {
+                if (!inBound(adjacent) || closed.contains(adjacent)) {
                     continue;
                 }
                 // Don't allow passing through vertical closed tiles.
                 if (current.x != adjacent.x && current.y != adjacent.y) {
-                    if (isClosed(closed, current.x, adjacent.y) && isClosed(closed, adjacent.x, current.y)) {
+                    if (isClosed(closed, current.x, adjacent.y) || isClosed(closed, adjacent.x, current.y)) {
                         continue;
                     }
                 }

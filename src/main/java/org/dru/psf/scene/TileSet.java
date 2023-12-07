@@ -18,8 +18,6 @@ public class TileSet extends Node {
         columnCount = image.getWidth() / tileWidth;
         rowCount = image.getHeight() / tileHeight;
         tileCount = columnCount * rowCount;
-        System.out.println(columnCount + ", " + rowCount);
-
     }
 
     @Override

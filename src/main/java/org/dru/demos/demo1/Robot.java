@@ -2,7 +2,6 @@ package org.dru.demos.demo1;
 
 import org.dru.psf.Application;
 import org.dru.psf.scene.AStar;
-import org.dru.psf.scene.Display;
 import org.dru.psf.scene.Vector2;
 
 import java.awt.*;

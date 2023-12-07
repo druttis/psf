@@ -37,7 +37,7 @@ public class Demo {
                 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
                 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1,
                 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
-                1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1,
+                1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
                 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
                 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1,
                 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
@@ -63,11 +63,17 @@ public class Demo {
         final Tree scene = new Tree();
         PLAYER = new Player(ASTAR);
         PLAYER.setPositionToTile(1, 1);
-        final Robot robot = new Robot(ASTAR);
-        robot.setPositionToTile(1, 14);
+        final Robot robot1 = new Robot(ASTAR);
+        robot1.setPositionToTile(1, 14);
+        final Robot robot2 = new Robot(ASTAR);
+        robot2.setPositionToTile(11, 1);
+        final Robot robot3 = new Robot(ASTAR);
+        robot3.setPositionToTile(11, 14);
         scene.addChild(TILE_MAP);
         scene.addChild(ASTAR);
-        scene.addChild(robot);
+        scene.addChild(robot1);
+        scene.addChild(robot2);
+        scene.addChild(robot3);
         scene.addChild(PLAYER);
         Display.setRoot(scene);
         Display.show("Test", WIDTH, HEIGHT, new Color(0, 0, 0));

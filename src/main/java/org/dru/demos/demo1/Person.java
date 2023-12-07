@@ -7,6 +7,7 @@ import org.dru.psf.scene.Tree;
 import org.dru.psf.scene.Vector2;
 
 import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
@@ -50,16 +51,20 @@ public abstract class Person extends Tree {
         if (targetPos != null) {
             head.setLookAt(endPosition);
             head.setFocus(1);
-            final Vector2 diff = targetPos.difference(currentPos);
-            final double length = diff.length();
-            diff.scale(1.0 / length);
-            diff.scale(Application.delta() * 200, Application.delta() * 200);
-            translateGlobalPosition(diff);
-            if (length < 1.0) {
-                setGlobalPosition(targetPos);
-                aStar.removeFirst(path);
-                targetPos = null;
-                onReachedEndPosition();
+            if (!currentPos.equals(targetPos)) {
+                final Vector2 diff = targetPos.difference(currentPos);
+                final double length = diff.length();
+                diff.scale(1.0 / length);
+                final double speed = Application.delta() * 200;
+                diff.scale(speed, speed);
+                if (length > 1) {
+                    translateGlobalPosition(diff);
+                } else {
+//                    setGlobalPosition(targetPos);
+                    aStar.removeFirst(path);
+                    targetPos = null;
+                    onReachedEndPosition();
+                }
             }
         } else {
             head.setFocus(0);
